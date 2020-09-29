@@ -34,10 +34,20 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
 import com.android.volley.toolbox.NetworkImageView;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.google.android.material.button.MaterialButton;
 import com.sim.localecomapp.network.ImageRequester;
 import com.sim.localecomapp.network.ProductEntry;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -58,6 +68,7 @@ public class EcomProductGrid extends Fragment implements  ProductCardRecyclerVie
     ListView cartList;
     RecyclerView recyclerView;
     ArrayAdapter adaptercart;
+    ProductCardRecyclerViewAdapter adapter;
 
     MenuItem cart_count;
     Menu lmenu;
@@ -286,25 +297,54 @@ public class EcomProductGrid extends Fragment implements  ProductCardRecyclerVie
         }
 
 
+        RequestQueue requestQueue= Volley.newRequestQueue(getContext());
+        String url="https://ecommercebackendd.herokuapp.com/api/produits?start=1&count=10";
+        StringRequest stringRequest=new StringRequest(StringRequest.Method.GET, url, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                Log.i(TAG, "onResponse: " + response);
+                try {
+                    JSONObject jsonObject=new JSONObject(response);
+                    JSONArray jsonArray= jsonObject.getJSONArray("products");
+                    for (int i = 0; i < jsonArray.length(); i++) {
+                        JSONObject productObject = jsonArray.getJSONObject(i);
+                        ProductEntry p=new ProductEntry(productObject.getString("nom"),"",productObject.getString("image_url"),
+                                productObject.getString("prix"), productObject.getString("description"));
+                        products.add(p);
+                    }
+                    recyclerView.setAdapter(adapter);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
 
-        ProductEntry p1=new ProductEntry("One Step","","https://ma.jumia.is/unsafe/fit-in/680x680/filters:fill(white)/product/09/293263/1.jpg?8828","199","A nice product");
-        products.add(p1);
-        ProductEntry p2=new ProductEntry("Black mask","","https://www.hivis.co.uk/images/thumbnails/450/397/detailed/72/black_mask_fitted_38bf-kc.JPG","89","A nice mask ");
-        products.add(p2);
-        ProductEntry p3=new ProductEntry("Pack Collagen","","https://rukminim1.flixcart.com/image/416/416/jua4djk0/face-treatment/6/w/g/30-collagen-serum-snail-original-imafffw3avgnnbjt.jpeg?q=70","180","A nice pack collagen");
-        products.add(p3);
-        ProductEntry p4=new ProductEntry("LIGE 2020 New Fashion","","https://ae01.alicdn.com/kf/H3115826418044f7d9485305526b121ffL/LIGE-2020-New-Fashion-Mens-Watches-Top-Brand-Luxury-Automatic-Mechanical-Clock-Watch-Men-Business-Dress.jpg","780","LIGE 2020 New Fashion Mens Watches with Stainless Steel Top Brand Luxury Sports");
-        products.add(p4);
-        ProductEntry p5=new ProductEntry("Baby Boy Clothes","","https://ae01.alicdn.com/kf/HTB1GX77ck5E3KVjSZFCq6zuzXXaO/2020-3PCS-Lot-Baby-Boy-Clothes-Bodysuots-Baby-Girl-Clothes-Unicorn-Girls-Clothing-Unisex-0-12M.jpg","690","2020 3PCS/Lot Baby Boy Clothes Bodysuots Baby Girl Clothes");
-        products.add(p5);
-        ProductEntry p6=new ProductEntry("Mini WiFi Camera","","https://ae01.alicdn.com/kf/H3a23b4211e8b4af3a2d433c37e1ccdb8c/SDETER-1080P-Wireless-Mini-WiFi-Camera-Home-Security-Camera-IP-CCTV-Surveillance-IR-Night-Vision-Motion.jpg","869","DETER 1080P Wireless Mini WiFi Camera Home Security Camera");
-        products.add(p6);
-        ProductEntry p7=new ProductEntry("Office Stretch Spandex Chair","","https://www.dhresource.com/0x0/f2/albu/g12/M01/CC/91/rBVakV85M8uATphQAAXNaPzXWOY394.jpg/soft-office-stretch-spandex-chair-cover-solid.jpg","1180","Anti-dirty Computer Seat Chair Cover Removable Slipcovers For Office Seat Chairs");
-        products.add(p7);
-        ProductEntry p8=new ProductEntry("LED Solar Light Outdoor","","https://ae01.alicdn.com/kf/Ha326f01ddfc44ad99468bbabbaae8174e/100-LED-Solar-Light-Outdoor-Solar-Lamp-PIR-Motion-Sensor-Wall-Light-Waterproof-Solar-Sunlight-Powered.jpg","235","LED Solar Light Outdoor Solar Lamp PIR Motion Sensor Wall Light Waterproof Solar Sunlight Powered Garden street light");
-        products.add(p8);
-        ProductEntry p9=new ProductEntry("VOXLINK HDMI Cable","","https://ae01.alicdn.com/kf/HTB1xgA0jsLJ8KJjy0Fnq6AFDpXa4/VOXLINK-HDMI-Cable-3FT-6FT-10FT-Ultra-High-Speed-Male-to-Male-HDMI-Cable-with-Ethernet.jpg","189"," Ultra High Speed Male to Male HDMI Cable with Ethernet 1080P HDMI 1.4 4K 3D for PS3 BLURAY XBOX");
-        products.add(p9);
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.i(TAG, "onErrorResponse: "+ error.getMessage());
+            }
+        });
+        requestQueue.add(stringRequest);
+
+
+//        ProductEntry p1=new ProductEntry("One Step","","https://ma.jumia.is/unsafe/fit-in/680x680/filters:fill(white)/product/09/293263/1.jpg?8828","199","A nice product");
+//        products.add(p1);
+//        ProductEntry p2=new ProductEntry("Black mask","","https://www.hivis.co.uk/images/thumbnails/450/397/detailed/72/black_mask_fitted_38bf-kc.JPG","89","A nice mask ");
+//        products.add(p2);
+//        ProductEntry p3=new ProductEntry("Pack Collagen","","https://rukminim1.flixcart.com/image/416/416/jua4djk0/face-treatment/6/w/g/30-collagen-serum-snail-original-imafffw3avgnnbjt.jpeg?q=70","180","A nice pack collagen");
+//        products.add(p3);
+//        ProductEntry p4=new ProductEntry("LIGE 2020 New Fashion","","https://ae01.alicdn.com/kf/H3115826418044f7d9485305526b121ffL/LIGE-2020-New-Fashion-Mens-Watches-Top-Brand-Luxury-Automatic-Mechanical-Clock-Watch-Men-Business-Dress.jpg","780","LIGE 2020 New Fashion Mens Watches with Stainless Steel Top Brand Luxury Sports");
+//        products.add(p4);
+//        ProductEntry p5=new ProductEntry("Baby Boy Clothes","","https://ae01.alicdn.com/kf/HTB1GX77ck5E3KVjSZFCq6zuzXXaO/2020-3PCS-Lot-Baby-Boy-Clothes-Bodysuots-Baby-Girl-Clothes-Unicorn-Girls-Clothing-Unisex-0-12M.jpg","690","2020 3PCS/Lot Baby Boy Clothes Bodysuots Baby Girl Clothes");
+//        products.add(p5);
+//        ProductEntry p6=new ProductEntry("Mini WiFi Camera","","https://ae01.alicdn.com/kf/H3a23b4211e8b4af3a2d433c37e1ccdb8c/SDETER-1080P-Wireless-Mini-WiFi-Camera-Home-Security-Camera-IP-CCTV-Surveillance-IR-Night-Vision-Motion.jpg","869","DETER 1080P Wireless Mini WiFi Camera Home Security Camera");
+//        products.add(p6);
+//        ProductEntry p7=new ProductEntry("Office Stretch Spandex Chair","","https://www.dhresource.com/0x0/f2/albu/g12/M01/CC/91/rBVakV85M8uATphQAAXNaPzXWOY394.jpg/soft-office-stretch-spandex-chair-cover-solid.jpg","1180","Anti-dirty Computer Seat Chair Cover Removable Slipcovers For Office Seat Chairs");
+//        products.add(p7);
+//        ProductEntry p8=new ProductEntry("LED Solar Light Outdoor","","https://ae01.alicdn.com/kf/Ha326f01ddfc44ad99468bbabbaae8174e/100-LED-Solar-Light-Outdoor-Solar-Lamp-PIR-Motion-Sensor-Wall-Light-Waterproof-Solar-Sunlight-Powered.jpg","235","LED Solar Light Outdoor Solar Lamp PIR Motion Sensor Wall Light Waterproof Solar Sunlight Powered Garden street light");
+//        products.add(p8);
+//        ProductEntry p9=new ProductEntry("VOXLINK HDMI Cable","","https://ae01.alicdn.com/kf/HTB1xgA0jsLJ8KJjy0Fnq6AFDpXa4/VOXLINK-HDMI-Cable-3FT-6FT-10FT-Ultra-High-Speed-Male-to-Male-HDMI-Cable-with-Ethernet.jpg","189"," Ultra High Speed Male to Male HDMI Cable with Ethernet 1080P HDMI 1.4 4K 3D for PS3 BLURAY XBOX");
+//        products.add(p9);
 
         // Set up the toolbar
 
@@ -312,7 +352,7 @@ public class EcomProductGrid extends Fragment implements  ProductCardRecyclerVie
         recyclerView = fragmentView.findViewById(R.id.recycler_view);
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(new GridLayoutManager(getContext(), 2, GridLayoutManager.VERTICAL, false));
-        ProductCardRecyclerViewAdapter adapter = new ProductCardRecyclerViewAdapter(products);
+        adapter = new ProductCardRecyclerViewAdapter(products);
         recyclerView.setAdapter(adapter);
 
         adapter.setOnItemClickListener(this);
